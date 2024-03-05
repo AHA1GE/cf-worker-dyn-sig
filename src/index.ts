@@ -78,7 +78,7 @@ async function dynamicSignature(request: Request, env: Env, footNote?: string) {
 	const ip = request.headers.get("cf-connecting-ip") || '';
 
 	// get weather data
-	const token = env.weatherToken;
+	const token = env.WEATHER_TOKEN;
 	const weatherEndpoint = "https://api.waqi.info/feed";
 	let weatherApi = `${weatherEndpoint}/geo:${latitude};${longitude}/?token=${token}`;
 	const weatherInit = { headers: { "content-type": "application/json;charset=UTF-8", }, };
