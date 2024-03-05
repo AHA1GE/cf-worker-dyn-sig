@@ -65,9 +65,10 @@ async function dynamicSignature(request: Request, env: Env, footNote?: string) {
 	const ua: string = request.headers.get("user-agent") || '';
 	const parser = new UAParser(ua);
 	const result = parser.getResult();
+	console.log(result);
 	const uaData = {
 		os: result.os.name + " " + result.os.version,
-		browser: result.device.model + "-" + result.browser.name + " " + result.browser.version
+		browser: result.browser.name + " " + result.browser.version
 	}
 
 	// use cloudlfare provided location
