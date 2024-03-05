@@ -3,7 +3,7 @@ import { config } from './config';
 
 export interface Env {
 	// Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
-	MY_KV_NAMESPACE: KVNamespace;
+	// MY_KV_NAMESPACE: KVNamespace;
 	//
 	// Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
 	// MY_DURABLE_OBJECT: DurableObjectNamespace;
@@ -16,20 +16,21 @@ export interface Env {
 	//
 	// Example binding to a Queue. Learn more at https://developers.cloudflare.com/queues/javascript-apis/
 	// MY_QUEUE: Queue;
+	WEATHER_TOKEN: string
 }
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		// return 
-		return handleRequest(request);
+		return handleRequest(request, env);
 	},
 };
 
-async function handleRequest(request: Request) {
+async function handleRequest(request: Request, env: Env): Promise<Response> {
 	const requestUrl = new URL(request.url);
 	switch (requestUrl.pathname.toLowerCase()) {
 		case "/":
-			return await dynamicSignature(request);
+			return await dynamicSignature(request, env);
 		case "/robots.txt":
 			return new Response( //use tobotsTXT from config, cache 1 year inmutable
 				config.robotsTXT,
@@ -52,12 +53,12 @@ async function handleRequest(request: Request) {
 			);
 		default:
 			//return dynamicSignature with footNote=pathName, remove the first char '/' and suffix after last '.'
-			return await dynamicSignature(request, requestUrl.pathname.substring(1).split('.').slice(0, -1).join('.'));
+			return await dynamicSignature(request, env, requestUrl.pathname.substring(1).split('.').slice(0, -1).join('.'));
 	}
 
 }
 
-async function dynamicSignature(request: Request, footNote?: string) {
+async function dynamicSignature(request: Request, env: Env, footNote?: string) {
 
 	// console.log(request.cf);
 
@@ -77,7 +78,7 @@ async function dynamicSignature(request: Request, footNote?: string) {
 	const ip = request.headers.get("cf-connecting-ip") || '';
 
 	// get weather data
-	const token = 'd4f93a05712347fff27c72ed10382d2d5c795e2c';
+	const token = env.weatherToken;
 	const weatherEndpoint = "https://api.waqi.info/feed";
 	let weatherApi = `${weatherEndpoint}/geo:${latitude};${longitude}/?token=${token}`;
 	const weatherInit = { headers: { "content-type": "application/json;charset=UTF-8", }, };
