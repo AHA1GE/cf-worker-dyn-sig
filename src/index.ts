@@ -1,5 +1,6 @@
 import { UAParser } from 'ua-parser-js';
 import { config } from './config';
+import { wmoCodes } from './wmoWeatherCodes';
 
 export interface Env {
 	// Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
@@ -81,9 +82,16 @@ async function dynamicSignature(request: Request, env: Env, footNote?: string) {
 	let tempratureApi = `${tempratureEndpoint}/geo:${latitude};${longitude}/?token=${token}`;
 	const tempratureInit = { headers: { "content-type": "application/json;charset=UTF-8", }, };
 	const tempratureResponse = await fetch(tempratureApi, tempratureInit);
-	const content: any = await tempratureResponse.json();
-	const tempratureData = content.data;
-	console.log(tempratureData)
+	const tempratureContent: any = await tempratureResponse.json();
+	const tempratureData = tempratureContent.data;
+
+	// get weather data
+	const weatherApiAddress = `https://api.open-meteo.com/v1/forecast?`;
+	const weatherApiParams = `latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&timezone=${request.cf?.timezone}`
+	const weatherResponse = await fetch(weatherApiAddress + weatherApiParams);
+	const weatherContent: any = await weatherResponse.json();
+	const weatherCode: number = weatherContent.current.weather_code;
+	const weatherText: string = wmoCodes[weatherCode];
 
 	// get ip data
 	const ipApiAddress = 'http://ip-api.com/json/'
@@ -112,6 +120,7 @@ async function dynamicSignature(request: Request, env: Env, footNote?: string) {
 		geoCity: tempratureData.city.name.replace(/[^a-zA-Z,.]/g, ''), //leave only alphbets and , .
 		aqi: tempratureData.aqi,
 		temperature: tempratureData.iaqi.t?.v,
+		weather: weatherText,
 		os: uaData.os,
 		browser: uaData.browser
 	}
@@ -159,7 +168,7 @@ async function dynamicSignature(request: Request, env: Env, footNote?: string) {
 
 		line2: `Today is ${new Date().toLocaleDateString()}, ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()]}`,
 
-		line3: `It is ${finalData.temperature}°C at:`,
+		line3: `It is ${finalData.temperature}°C and ${finalData.weather} at:`,
 
 		line4: `${finalData.geoCity}.`,
 
