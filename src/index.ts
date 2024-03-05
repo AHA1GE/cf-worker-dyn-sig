@@ -60,8 +60,6 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
 async function dynamicSignature(request: Request, env: Env, footNote?: string) {
 
-	// console.log(request.cf);
-
 	// ua
 	const ua: string = request.headers.get("user-agent") || '';
 	const parser = new UAParser(ua);
@@ -77,16 +75,17 @@ async function dynamicSignature(request: Request, env: Env, footNote?: string) {
 	// use ip
 	const ip = request.headers.get("cf-connecting-ip") || '';
 
-	// get weather data
+	// get temprature data
 	const token = env.WEATHER_TOKEN;
-	const weatherEndpoint = "https://api.waqi.info/feed";
-	let weatherApi = `${weatherEndpoint}/geo:${latitude};${longitude}/?token=${token}`;
-	const weatherInit = { headers: { "content-type": "application/json;charset=UTF-8", }, };
-	const weatherResponse = await fetch(weatherApi, weatherInit);
-	const content: any = await weatherResponse.json();
-	const weatherData = content.data;
+	const tempratureEndpoint = "https://api.waqi.info/feed";
+	let tempratureApi = `${tempratureEndpoint}/geo:${latitude};${longitude}/?token=${token}`;
+	const tempratureInit = { headers: { "content-type": "application/json;charset=UTF-8", }, };
+	const tempratureResponse = await fetch(tempratureApi, tempratureInit);
+	const content: any = await tempratureResponse.json();
+	const tempratureData = content.data;
+	console.log(tempratureData)
 
-	// get  ip data
+	// get ip data
 	const ipApiAddress = 'http://ip-api.com/json/'
 	const ipResponse = await fetch(ipApiAddress + ip);
 	const ipContent: any = await ipResponse.json();
@@ -110,9 +109,9 @@ async function dynamicSignature(request: Request, env: Env, footNote?: string) {
 		region: ipData.regionName,
 		city: ipData.city,
 		ipText: ipData.ipText,
-		geoCity: weatherData.city.name,
-		aqi: weatherData.aqi,
-		temperature: weatherData.iaqi.t?.v,
+		geoCity: tempratureData.city.name.replace(/[^a-zA-Z,.]/g, ''), //leave only alphbets and , .
+		aqi: tempratureData.aqi,
+		temperature: tempratureData.iaqi.t?.v,
 		os: uaData.os,
 		browser: uaData.browser
 	}
@@ -155,18 +154,20 @@ async function dynamicSignature(request: Request, env: Env, footNote?: string) {
 
 
 	const text = {
-		// line1: 'Hello! friend from ' + finalData.country + ' ' + finalData.region + ' ' + finalData.city,
+
 		line1: `Hello! friend from ${finalData.ipText}.`,
-		// line2: 'Today is ' + new Date().toLocaleDateString() + ', ' + ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()],
+
 		line2: `Today is ${new Date().toLocaleDateString()}, ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()]}`,
-		// line3: 'The temprature at city of ' + finalData.geoCity + ' is' + finalData.temperature + '℃',
-		line3: `The temprature at ${finalData.geoCity} is ${finalData.temperature}℃`,
-		// line4: 'You are using ' + finalData.os,
-		line4: `You are using ${finalData.os}.`,
-		// line5: 'Your browser is ' + finalData.browser,
-		line5: `Your browser is ${finalData.browser}.`,
+
+		line3: `It is ${finalData.temperature}°C at:`,
+
+		line4: `${finalData.geoCity}.`,
+
+		line5: `You are using ${finalData.browser} on ${finalData.os}.`,
+
 		line6: footNote ? footNote : 'Powered by Cloudflare Workers.'
 	}
+	console.log(text);
 
 	// use cloudflare worker image api
 	const tti = 'https://text-to-image.examples.workers.dev/?' //text To Image Api Address
@@ -225,8 +226,7 @@ async function dynamicSignature(request: Request, env: Env, footNote?: string) {
 			},
 		},
 	});
-	console.log(finalResponse); //dev
-	// return finalImg;
+
 	if (finalResponse.ok || finalResponse.redirected) {
 		return finalResponse
 	} else {
