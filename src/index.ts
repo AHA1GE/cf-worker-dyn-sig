@@ -1,3 +1,4 @@
+// TODO: factor out functions, separately treat China IP to fix the geolocation shifting issue 
 import { UAParser } from 'ua-parser-js';
 import { config } from './config';
 import { wmoCodes } from './wmoWeatherCodes';
