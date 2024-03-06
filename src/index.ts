@@ -138,7 +138,7 @@ async function dynamicSignature(request: Request, env: Env, footNote?: string) {
 			height: 20,
 			fit: 'scale-down',
 			left: 15,
-			top: 135,
+			top: 133,
 		},
 		{
 			url: tti + encodeURIComponent(text.line5),
@@ -151,8 +151,8 @@ async function dynamicSignature(request: Request, env: Env, footNote?: string) {
 			url: tti + encodeURIComponent(text.line6),
 			height: 10,
 			fit: 'scale-down',
-			left: 15,
-			top: 190,
+			left: 20,
+			top: 195,
 		},
 	];
 
@@ -182,7 +182,7 @@ async function getUserData(ip: string, token: string, request: Request): Promise
 	console.log(result);
 	const uaData = {
 		os: result.os.name + " " + result.os.version,
-		browser: result.browser.name + " " + result.browser.version
+		browser: result.browser.name + " " + result.browser.version?.split('.')[0]
 	}
 
 	// use cloudlfare provided location
