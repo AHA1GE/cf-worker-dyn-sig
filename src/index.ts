@@ -106,7 +106,7 @@ async function dynamicSignature(request: Request, env: Env, footNote?: string) {
 		line5: `You are using ${finalData.browser} on ${finalData.os}.`,
 		line6: footNote ? footNote : 'Powered by Cloudflare Workers.'
 	}
-	console.log(text);
+	// console.log(text);
 
 	// use cloudflare worker image api
 	const tti = 'https://text-to-image.examples.workers.dev/?' //text To Image Api Address
