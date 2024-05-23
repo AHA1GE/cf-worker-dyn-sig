@@ -1,4 +1,6 @@
-# cf-worker-dyn-sig (中文) *English see below*
+# cf-worker-dyn-sig (中文) 
+
+*English see below*
 
 这个项目利用 Cloudflare Workers 为论坛动态生成图片签名档。它是项目 [xhboke/IP](https://github.com/xhboke/IP) 的 TypeScript 重构版。你可以在这里预览其功能：[ahaigege.com/sig](https://ahaigege.com/sig)。
 
