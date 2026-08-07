@@ -3,7 +3,7 @@
 *English see below*
 
 这个项目利用 Cloudflare Workers 为论坛动态生成图片签名档。它是项目 [xhboke/IP](https://github.com/xhboke/IP) 的 TypeScript 重构版。
-预览：![dyn-sig.ahai.workers.dev](https://dyn-sig.ahai.workers.dev)。
+预览：![sig.ahaigege.com](https://sig.ahaigege.com/Nice2MeetU)。
 
 ## 部署
 
@@ -40,7 +40,7 @@
 # cf-worker-dyn-sig (EN)
 
 This project leverages Cloudflare Workers to generate dynamic signature images for bulletin board systems (BBS). It is a TypeScript rework of the project found at [xhboke/IP](https://github.com/xhboke/IP). 
-Preview: ![dyn-sig.ahai.workers.dev](https://dyn-sig.ahai.workers.dev).
+Preview: ![sig.ahaigege.com](https://sig.ahaigege.com/Nice2MeetU).
 
 ## Deployment
 
