@@ -1,6 +1,7 @@
 // TODO: separately treat China IP to fix the geolocation shifting issue 
 import { UAParser } from 'ua-parser-js';
 import { config } from './config';
+import { detectLocale, format, messages } from './i18n';
 import { wmoCodes } from './wmoWeatherCodes';
 
 export interface Env {
@@ -21,6 +22,11 @@ export interface Env {
 	WEATHER_TOKEN: string
 }
 
+interface SignatureOptions {
+	footnote?: string;
+	background?: string;
+}
+
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		// return 
@@ -30,9 +36,11 @@ export default {
 
 async function handleRequest(request: Request, env: Env): Promise<Response> {
 	const requestUrl = new URL(request.url);
+	const footnote = requestUrl.searchParams.get('footnote') || undefined;
+	const background = requestUrl.searchParams.get('background') || undefined;
 	switch (requestUrl.pathname.toLowerCase()) {
 		case "/":
-			return await dynamicSignature(request, env);
+			return await dynamicSignature(request, env, { footnote, background });
 		case "/robots.txt":
 			return new Response( //use tobotsTXT from config, cache 1 year inmutable
 				config.robotsTXT,
@@ -54,13 +62,14 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 				{ headers: { "Content-Type": "image/png", "Cache-Control": "max-age=31536000, immutable" } }
 			);
 		default:
-			//return dynamicSignature with footNote=pathName, remove the first char '/' and suffix after last '.'
-			return await dynamicSignature(request, env, requestUrl.pathname.substring(1).split('.').slice(0, -1).join('.'));
+			//footnote from query param takes precedence, otherwise extract from pathname: remove the first char '/' and suffix after last '.'
+			const pathnameFootnote = requestUrl.pathname.substring(1).split('.').slice(0, -1).join('.');
+			return await dynamicSignature(request, env, { footnote: footnote || pathnameFootnote, background });
 	}
 
 }
 
-async function dynamicSignature(request: Request, env: Env, footNote?: string) {
+async function dynamicSignature(request: Request, env: Env, opts: SignatureOptions = {}) {
 
 	const token = env.WEATHER_TOKEN;
 	const ip = request.headers.get("cf-connecting-ip") || ''; //user's  ip
@@ -98,19 +107,22 @@ async function dynamicSignature(request: Request, env: Env, footNote?: string) {
 	});
 	****************************************************************/
 
+	const locale = detectLocale(request);
+	const msg = messages[locale];
+	const now = new Date();
 	const text = {
-		line1: `Hello! friend from ${finalData.ipText}.`,
-		line2: `Today is ${new Date().toLocaleDateString()}, ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()]}`,
-		line3: `It is ${finalData.temperature}°C and ${finalData.weather} at:`,
-		line4: `${finalData.geoCity}.`,
-		line5: `You are using ${finalData.browser} on ${finalData.os}.`,
-		line6: footNote ? footNote : 'Powered by Cloudflare Workers.'
+		line1: format(msg.line1, { ip: finalData.ipText }),
+		line2: format(msg.line2, { date: now.toLocaleDateString(locale), weekday: new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(now) }),
+		line3: format(msg.line3, { temp: String(finalData.temperature), weather: finalData.weather }),
+		line4: format(msg.line4, { city: finalData.geoCity }),
+		line5: format(msg.line5, { browser: finalData.browser, os: finalData.os }),
+		line6: format(msg.line6, { footnote: opts.footnote || msg.poweredBy }),
 	}
 	// console.log(text);
 
 	// use cloudflare worker image api
 	const tti = 'https://text-to-image.examples.workers.dev/?' //text To Image Api Address
-	const imageURL = 'https://github.com/AHA1GE/cf-worker-dyn-sig/blob/main/src/xhxh.jpg?raw=true';
+	const imageURL = resolveBackground(opts.background);
 	const draw: RequestInitCfPropertiesImageDraw[] = [ //draw text line by line, encode the text to uri first
 		{
 			url: tti + encodeURIComponent(text.line1),
@@ -172,6 +184,21 @@ async function dynamicSignature(request: Request, env: Env, footNote?: string) {
 		// Change to a URL on your server
 		return fetch("https://filesamples.com/samples/image/jpg/sample_640%C3%97426.jpg")
 	}
+}
+
+function resolveBackground(background?: string): string {
+	if (!background) {
+		return config.backgroundAddress;
+	}
+	try {
+		const url = new URL(background);
+		if (url.protocol === 'http:' || url.protocol === 'https:') {
+			return url.toString();
+		}
+	} catch {
+		// invalid url, fall back to default background
+	}
+	return config.backgroundAddress;
 }
 
 async function getUserData(ip: string, token: string, request: Request): Promise<any> {
