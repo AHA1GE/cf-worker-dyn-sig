@@ -110,7 +110,7 @@ async function dynamicSignature(request: Request, env: Env, footNote?: string) {
 
 	// use cloudflare worker image api
 	const tti = 'https://text-to-image.examples.workers.dev/?' //text To Image Api Address
-	const imageURL = 'https://github.com/AHA1GE/IP/blob/master/xhxh.jpg?raw=true';
+	const imageURL = 'https://github.com/AHA1GE/cf-worker-dyn-sig/blob/main/src/xhxh.jpg?raw=true';
 	const draw: RequestInitCfPropertiesImageDraw[] = [ //draw text line by line, encode the text to uri first
 		{
 			url: tti + encodeURIComponent(text.line1),
